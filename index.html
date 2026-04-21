@@ -99,8 +99,14 @@
       gap: 12px;
       margin-bottom: 12px;
     }
+    @media (max-width: 480px) {
+      .wrap { padding: 28px 16px 48px; }
+      .app-name { font-size: 1.9rem; }
+    }
     @media (max-width: 560px) {
       .demo-grid { grid-template-columns: 1fr; }
+      textarea { height: 140px; }
+      .result-meta { flex-wrap: wrap; gap: 6px; }
     }
 
     textarea {
@@ -211,6 +217,16 @@
       font-size: .8rem; color: var(--muted); line-height: 1.5;
     }
 
+    /* ── INJECTED BUTTONS (buttons.js) ── */
+    #btn-group button {
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 20px; padding: 4px 14px;
+      cursor: pointer; font-weight: 500;
+      transition: opacity .15s;
+    }
+    #btn-group button:hover { opacity: .85; }
+
     /* ── FOOTER ── */
     footer {
       margin-top: 48px; padding-top: 20px;
@@ -253,7 +269,7 @@
   </div>
 
   <!-- DEMO -->
-  <span class="section-lbl">Live demo — paste any JSON and run it</span>
+  <span class="section-lbl">Live demo — paste or open a file, then run it</span>
 
   <!-- Presets -->
   <div class="preset-row">
@@ -312,9 +328,9 @@
 </div>
 
 <!-- Load the actual module -->
-<script src="index.js"></script>
-
-<script>
+<script src="https://cdn.jsdelivr.net/gh/edmundsparrow/gnoke-flatjson/index.js"></script>
+<script src="buttons.js"></script>
+  <script>
   /* ── Presets ── */
   const PRESETS = {
     arrayOfObjects: JSON.stringify([
@@ -378,7 +394,7 @@
       return;
     }
 
-    const result = flatJson(parsed);
+    const result = window.flatJson(parsed);
     document.getElementById('output').value = JSON.stringify(result, null, 2);
     renderTable(result);
   }
@@ -416,6 +432,10 @@
     document.getElementById('error-msg').textContent = msg;
     document.getElementById('error-wrap').style.display = 'block';
   }
+
+  /* expose for buttons.js */
+  window.renderTable = renderTable;
+  window.showError   = showError;
 
   /* ── Copy install ── */
   function copyInstall(btn) {
