@@ -1,0 +1,24 @@
+{
+  "name": "gnoke-flatjson",
+  "version": "1.0.0",
+  "description": "Normalize any JSON shape into { headers, rows } — zero dependencies, works in Node.js and the browser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "json",
+    "normalize",
+    "flatten",
+    "table",
+    "headers",
+    "rows",
+    "parser",
+    "converter"
+  ],
+  "author": "Edmund Sparrow",
+  "license": "MIT",
+  "engines": {
+    "node": ">=12"
+  }
+}

@@ -1,16 +1,15 @@
-# gnoke-flatjson
+# Gnoke FlatJSON
 
-Normalize any JSON structure into a consistent `{ headers, rows }` format.
-
-No dependencies. Works in Node.js and the browser.
+Normalize any JSON structure into a consistent `{ headers, rows }` format.  
+Zero dependencies. Works in Node.js and the browser.
 
 ---
 
-## The problem
+## The Problem
 
-JSON comes in many shapes. An API returns an array of objects. A database export wraps rows inside an entity key. A spreadsheet export uses an array of arrays. Every project ends up writing its own detection logic — badly.
+JSON data is inconsistent. Some APIs return arrays of objects, others wrap data in entity keys, and spreadsheet exports often use arrays of arrays.
 
-This module handles all of them with one function call.
+**gnoke-flatjson** handles the detection logic automatically, so your UI always receives a predictable tabular format.
 
 ---
 
@@ -24,110 +23,119 @@ npm install gnoke-flatjson
 
 ## Usage
 
-```js
+```javascript
 const flatJson = require('gnoke-flatjson');
 
+const data = [
+  { name: "Alice", age: 30 },
+  { name: "Bob",   age: 25, city: "Lagos" }
+];
+
 const result = flatJson(data);
-// result.headers — string[]     column names
-// result.rows    — string[][]   all rows, all cells as strings
-// result.schema  — array|null   type hints if present in source data
+
+// result.headers -> ["name", "age", "city"]
+// result.rows    -> [["Alice", "30", ""], ["Bob", "25", "Lagos"]]
+// result.schema  -> ["string", "number", "undefined"]
 ```
 
 ---
 
-## What it handles
+## Supported Formats
 
-### Array of objects
-```js
+### 1. Array of Objects
+
+Extracts all unique keys as headers. Missing values become empty strings.
+
+```javascript
 flatJson([
   { name: "Alice", age: 30 },
-  { name: "Bob",   age: 25 }
+  { name: "Bob",   age: 25, city: "Lagos" }
 ]);
-// headers: ["name", "age"]
-// rows:    [["Alice","30"], ["Bob","25"]]
+// headers: ["name", "age", "city"]
+// rows:    [["Alice", "30", ""], ["Bob", "25", "Lagos"]]
 ```
 
-### Array of arrays (spreadsheet style)
-```js
+### 2. Array of Arrays
+
+Treats the first row as headers and the rest as data.
+
+```javascript
 flatJson([
   ["name", "age"],
   ["Alice", 30],
   ["Bob",   25]
 ]);
 // headers: ["name", "age"]
-// rows:    [["Alice","30"], ["Bob","25"]]
+// rows:    [["Alice", 30], ["Bob", 25]]
 ```
 
-### Entity-wrapped (DataForge / Gnoke format)
-```js
-flatJson({
-  "people": [["name","age"], ["Alice",30], ["Bob",25]]
-});
-// headers: ["name", "age"]
-// rows:    [["Alice","30"], ["Bob","25"]]
+### 3. Entity-Wrapped (Gnoke Format)
+
+Handles structures like:
+
+```json
+{ "users": [["name", "age"], ["Alice", 30]] }
 ```
 
-### Explicit headers + rows
-```js
-flatJson({
-  headers: ["name", "age"],
-  rows: [["Alice", 30], ["Bob", 25]]
-});
-// headers: ["name", "age"]
-// rows:    [["Alice","30"], ["Bob","25"]]
-```
+### 4. Single Object
 
-### Single flat object
-```js
+Converts `{ key: value }` into a one-row table. Nested objects are JSON-stringified.
+
+```javascript
 flatJson({ name: "Alice", age: 30 });
 // headers: ["name", "age"]
 // rows:    [["Alice", "30"]]
 ```
 
-### Array of primitives
-```js
-flatJson(["Alice", "Bob", "Carol"]);
-// headers: ["Column 1", "Column 2", "Column 3"]
-// rows:    [["Alice", "Bob", "Carol"]]
-```
+### 5. Array of Primitives
 
-### Inconsistent object keys
-Missing keys become empty strings. No columns are silently dropped.
-```js
-flatJson([
-  { name: "Alice", age: 30 },
-  { name: "Bob",   age: 25, email: "bob@example.com" }
-]);
-// headers: ["name", "age", "email"]
-// rows:    [["Alice","30",""], ["Bob","25","bob@example.com"]]
-```
+Each value becomes its own row.
 
-### Nested objects
-Nested values are stringified as JSON rather than showing `[object Object]`.
-```js
-flatJson([
-  { name: "Alice", address: { city: "Lagos", zip: "100001" } }
-]);
-// headers: ["name", "address"]
-// rows:    [["Alice", '{"city":"Lagos","zip":"100001"}']]
+```javascript
+flatJson(["Apple", "Mango", "Orange"]);
+// headers: ["Value"]
+// rows:    [["Apple"], ["Mango"], ["Orange"]]
 ```
 
 ---
 
-## Browser (without npm)
+## Options
+
+### `flatten` (default: `false`)
+
+When `true`, nested objects in an array of objects are expanded using dot-notation keys instead of being JSON-stringified.
+
+```javascript
+flatJson([
+  { name: "Alice", address: { city: "Lagos", zip: "100001" } }
+], { flatten: true });
+
+// headers: ["name", "address.city", "address.zip"]
+// rows:    [["Alice", "Lagos", "100001"]]
+```
+
+---
+
+## Schema Inference
+
+For arrays of objects, `result.schema` contains the inferred `typeof` for each column based on the first row.
+
+```javascript
+const result = flatJson([{ name: "Alice", age: 30, active: true }]);
+// result.schema -> ["string", "number", "boolean"]
+```
+
+---
+
+## Browser Usage
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/edmundsparrow/gnoke-flatjson/index.js"></script>
 <script>
-  const result = flatJson(data);
+  const result = flatJson(myData);
+  console.log(result.headers, result.rows);
 </script>
 ```
-
----
-
-## Part of the Gnoke Suite
-
-Built from [Gnoke DataForge](https://github.com/edmundsparrow/gnoke-dataforge) — offline-first tools for developers and independent builders.
 
 ---
 
